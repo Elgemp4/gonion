@@ -30,10 +30,8 @@ func (ncs* NpmCacheService) resolveRessource(ressourceName string) domain.Ressou
 	var ressource domain.Ressource
 
 	if(strings.HasSuffix(ressourceName, ".tgz")){
-		println("Package asked")
 		ressource = domain.NewNPMArchive(ressourceName)
 	}else{
-		println("Meta asked")
 		ressource = domain.NewNpmMeta(ressourceName)
 	}
 

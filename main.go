@@ -4,6 +4,8 @@ import (
 	"gonion/src/controllers"
 	"gonion/src/repositories"
 	"gonion/src/services"
+	"log/slog"
+	"os"
 
 	"github.com/gofiber/fiber/v2"
 )
@@ -24,6 +26,8 @@ func NpmProxy() {
 
 	app.Get("*", npm_controller.HandleRequest)
 
+	slog.Info("NPM Proxy Started on port 3473")
+
 	app.Listen(":3473")
 }
 
@@ -34,11 +38,17 @@ func ComposerProxy() {
 		return c.SendString("Hello from composer proxy")
 	})
 
-
+	slog.Info("NPM Proxy Started on port 3500")
 	app.Listen(":3500")
 }
 
 func main() {
+	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
+		Level: slog.LevelInfo,
+	}))
+
+	slog.SetDefault(logger)
+
 	go NpmProxy()
 	go ComposerProxy()
 

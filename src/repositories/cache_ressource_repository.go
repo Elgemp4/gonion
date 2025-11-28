@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"gonion/src/domain"
+	"log/slog"
 )
 
 type CacheRessourceRepository struct{
@@ -18,6 +19,7 @@ func NewCacheRessourceRepository(fsRepo *FsRessourceRepository, npmRepo *NpmRess
 
 func (c *CacheRessourceRepository) LoadRessource(ressource domain.Ressource) (string, error) {
 	if(c.FsRepo.IsCached(ressource)){
+		slog.Info("GET (from cache)", "ressource", ressource.RessourceName())
 		return c.FsRepo.GetRessourcePath(ressource), nil;
 	}
 
@@ -40,6 +42,7 @@ func (c *CacheRessourceRepository) LoadRessource(ressource domain.Ressource) (st
 				return "", err
 			}
 	}
+	slog.Info("GET (from fetch)", "ressource", ressource.RessourceName())
 
 	return c.FsRepo.GetRessourcePath(ressource), nil;
 }
