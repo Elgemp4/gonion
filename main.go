@@ -1,20 +1,24 @@
 package main
 
 import (
-	"gonion/controllers"
+	"gonion/src/controllers"
+	"gonion/src/repositories"
+	"gonion/src/services"
 
-	"github.com/go-resty/resty/v2"
 	"github.com/gofiber/fiber/v2"
 )
 
 func NpmProxy() {
-	npm_registry := "https://registry.npmjs.org/"
-	local_registry := "http://localhost:3473/"
+	npmUrl := "https://registry.npmjs.org/"
+	localUrl := "http://localhost:3473/"
 
-	client := resty.New()
-	client.BaseURL = npm_registry
+	npmRepository := repositories.NewNpmRessourceRepository(npmUrl)
+	fsRepository := repositories.NewFsRessourceRepository("./cache/npm", npmUrl, localUrl)
+	cacheRepository := repositories.NewCacheRessourceRepository(fsRepository, npmRepository)
 
-	npm_controller := controllers.NewNpmController(client, "./cache/npm", npm_registry, local_registry)
+	npmService := services.NewNpmCacheService(cacheRepository)
+
+	npm_controller := controllers.NewNpmController(npmService)
 
 	app := fiber.New()
 
