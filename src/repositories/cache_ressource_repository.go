@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"errors"
 	"gonion/src/domain"
 	"log/slog"
 )
@@ -32,7 +33,17 @@ func (c *CacheRessourceRepository) LoadRessource(ressource domain.Ressource) (st
 	netError :=c.NpmRepo.DownloadRessource(ressource, writer)
 
 	if(netError != nil){
+		if(errors.Is(netError, domain.ErrRessourceCachingFailure)){
+			c.FsRepo.CleanRessource(ressource)
+		}
+
 		return "", netError
+	}
+
+	renameErr := c.FsRepo.ValidateCaching(ressource)
+
+	if(renameErr != nil){
+		return "", renameErr
 	}
 
 	switch ressource.(type) {

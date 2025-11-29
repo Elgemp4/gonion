@@ -3,6 +3,7 @@ package repositories
 import (
 	"gonion/src/domain"
 	"io"
+	"log/slog"
 
 	"github.com/go-resty/resty/v2"
 )
@@ -25,12 +26,23 @@ func (npr *NpmRessourceRepository) DownloadRessource(ressource domain.Ressource,
 		Get(ressource.RessourceName())
 
 	if(err != nil){
-		return err
+		return domain.ErrUnreachableUpstream
 	}
 
-	io.Copy(output, resp.RawBody())
+	if resp.StatusCode() != 200 {
+        output.Close()
+        slog.Error("404 error from upstream", "ressource", ressource.RessourceName())
+		return domain.ErrNotFound
+    }
 
-	resp.RawBody().Close()
+	_, errCopy := io.Copy(output, resp.RawBody())
+
+	errOutputClose := output.Close()
+	errInputClose := resp.RawBody().Close()
+
+	if(errCopy != nil || errOutputClose != nil || errInputClose != nil){
+		return domain.ErrRessourceCachingFailure
+	}
 
 	return nil
 }

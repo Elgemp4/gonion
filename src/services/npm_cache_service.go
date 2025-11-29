@@ -20,6 +20,10 @@ func NewNpmCacheService(repository repositories.RessourceRepository) *NpmCacheSe
 
 func (ncs* NpmCacheService) sanytizeRessource(path string) (string, error){
 	decodedUrl, decodingErr := url.QueryUnescape(path)
+
+	if(decodingErr != nil){
+		return "", domain.ErrBadRessourceName
+	}
 	
 	cleanedUrl := filepath.Clean(decodedUrl)
 
@@ -42,7 +46,7 @@ func (ncs *NpmCacheService) GetRessourceLocalPath(name string) (string, error) {
 	ressourceName, sanytiszeError := ncs.sanytizeRessource(name)
 
 	if(sanytiszeError != nil) {
-		return "", domain.ErrBadPackageName
+		return "", sanytiszeError
 	}
 
 	ressource := ncs.resolveRessource(ressourceName)
