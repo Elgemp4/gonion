@@ -26,6 +26,7 @@ func (n* NpmController) HandleRequest(c* fiber.Ctx) error {
 	if(err != nil) {
 		if(errors.As(err, &pathError)){
 			slog.Error("Error while writing on the disk", "requested", c.Params("*"))
+			slog.Debug(err.Error())
 			return c.Status(500).JSON(fiber.Map{"message": "Error while writing on the disk"})
 		}
 		if(errors.Is(err, domain.ErrRessourceCachingFailure)){

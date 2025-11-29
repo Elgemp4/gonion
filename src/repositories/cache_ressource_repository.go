@@ -4,11 +4,13 @@ import (
 	"errors"
 	"gonion/src/domain"
 	"log/slog"
+	"sync"
 )
 
 type CacheRessourceRepository struct{
 	FsRepo 		*FsRessourceRepository
 	NpmRepo 	*NpmRessourceRepository 
+	Locks		sync.Map
 }
 
 func NewCacheRessourceRepository(fsRepo *FsRessourceRepository, npmRepo *NpmRessourceRepository) *CacheRessourceRepository{
@@ -19,6 +21,18 @@ func NewCacheRessourceRepository(fsRepo *FsRessourceRepository, npmRepo *NpmRess
 }
 
 func (c *CacheRessourceRepository) LoadRessource(ressource domain.Ressource) (string, error) {
+	if(c.FsRepo.IsCached(ressource)){
+		slog.Info("GET (from cache)", "ressource", ressource.RessourceName())
+		return c.FsRepo.GetRessourcePath(ressource), nil;
+	}
+
+	mu := &sync.Mutex{}
+	actual, _ := c.Locks.LoadOrStore(ressource.RessourceName(), mu)
+	lock := actual.(*sync.Mutex)
+
+	lock.Lock()
+	defer lock.Unlock()
+
 	if(c.FsRepo.IsCached(ressource)){
 		slog.Info("GET (from cache)", "ressource", ressource.RessourceName())
 		return c.FsRepo.GetRessourcePath(ressource), nil;
@@ -39,12 +53,7 @@ func (c *CacheRessourceRepository) LoadRessource(ressource domain.Ressource) (st
 
 		return "", netError
 	}
-
-	renameErr := c.FsRepo.ValidateCaching(ressource)
-
-	if(renameErr != nil){
-		return "", renameErr
-	}
+	
 
 	switch ressource.(type) {
 		case *domain.NpmMeta:
@@ -54,6 +63,9 @@ func (c *CacheRessourceRepository) LoadRessource(ressource domain.Ressource) (st
 			}
 	}
 	slog.Info("GET (from fetch)", "ressource", ressource.RessourceName())
-
+	renameErr := c.FsRepo.ValidateCaching(ressource)
+	if(renameErr != nil){
+		return "", renameErr
+	}
 	return c.FsRepo.GetRessourcePath(ressource), nil;
 }

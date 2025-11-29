@@ -77,14 +77,14 @@ func (fsRepo *FsRessourceRepository) CleanRessource(ressource domain.Ressource) 
 }
 
 func (fsRepo *FsRessourceRepository) RewriteUrls(ressource domain.Ressource) error{
-	path := fsRepo.GetRessourcePath(ressource)
+	path := fsRepo.GetPartRessourcePath(ressource)
 
 	data, readErr := os.ReadFile(path)
+
 
 	if(readErr != nil){
 		return readErr
 	}
-
 	newData := bytes.ReplaceAll(data, []byte(fsRepo.NpmUrl), []byte(fsRepo.LocalUrl))
 
 	writeErr := os.WriteFile(path, newData, 0655)
